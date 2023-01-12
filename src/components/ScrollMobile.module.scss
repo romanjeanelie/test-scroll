@@ -19,9 +19,9 @@ $headerHeight: 0px;
 .section {
   width: 100%;
   height: calc(100vh - $headerHeight);
-  scroll-snap-align: center;
+  scroll-snap-align: start;
   scroll-margin-block-start: $headerHeight;
-  // scroll-snap-stop: always;
+  scroll-snap-stop: always;
   border: 2px solid grey;
   display: flex;
   justify-content: center;
@@ -37,25 +37,27 @@ $headerHeight: 0px;
   }
 
   &.animate {
-    // height: 100vh;
-    scroll-snap-align: start;
-    height: 300vh;
-    display: block;
+    height: 200vh;
     background-color: darkcyan;
-  }
 
-  .card {
-    display: flex;
-    // display: none;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: darkblue;
-    justify-content: center;
-    align-items: center;
-    border: 2px solid salmon;
+    .square {
+      opacity: 0;
+      position: absolute;
+      top: 0;
+      left: 0;
+
+      width: 100%;
+      height: 100vh;
+
+      transition: 300ms opacity;
+
+      // Fix bug whith scroll-snap when opacity change
+      will-change: opacity;
+
+      &.inView {
+        opacity: 1;
+      }
+    }
   }
 }
 

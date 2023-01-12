@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from "react"
 import { throttle } from "lodash";
 import { isIOS } from "react-device-detect";
 import useScrollDirection from "../hooks/useScrollDirection";
-import { useInView } from "react-intersection-observer";
 
 // Styles
 import { gsap } from "gsap";
@@ -31,14 +30,16 @@ const useScroll = (options) => {
 
   const addEventListener = () => {
     rootElement.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll);
   };
 
   const removeEventListener = () => {
     rootElement.removeEventListener("scroll", onScroll);
+    window.removeEventListener("scroll", onScroll);
   };
 
   const updateScrollValues = useCallback(() => {
-    const y = rootElement.scrollTop;
+    const y = window.pageYOffset || rootElement.scrollTop;
     const yProgress = (rootElement.scrollTop + rootElement.offsetHeight) / rootElement.scrollHeight;
 
     setScrollValues(() => ({
@@ -52,20 +53,8 @@ const useScroll = (options) => {
     [updateScrollValues]
   );
 
-  // const handleScroll = useMemo(
-  //   () =>
-  //     wait !== 0 ? throttle(() => scrollFunc(), wait) : () => scrollFunc(),
-  //   [wait, scrollFunc]
-  // );
-
   return scrollValues;
 };
-
-function useArrayRef(ref) {
-  const refs = useRef([]);
-  refs.current = [];
-  return [refs, (ref) => ref && refs.current.push(ref)];
-}
 
 function Header() {
   const direction = useScrollDirection();
@@ -95,38 +84,20 @@ const Card = React.forwardRef(({ index }, ref) => {
   );
 });
 
-function AnimateSection() {
-  // Config
-  const cards = new Array(4).fill();
-  const factorMarginBottom = 1;
-
-  // State
+function AnimateSection({ index, color }) {
+  //   // State
   const { y } = useScroll({ wait: 100 });
   const [bounds, setBounds] = useState({});
-  const [index, setIndex] = useState({
-    current: null,
-    prev: null,
-  });
+  const [isInView, setIsInView] = useState(false);
 
-  //Refs
+  // Ref
   const section = useRef();
-  const [cardsRefs, setCardsRefs] = useArrayRef();
-  const timeline = useRef(gsap.timeline({ paused: true }));
-
-  // Intersection
-  const { ref: inViewRef, inView, entry } = useInView();
-  const setRefs = useCallback(
-    (node) => {
-      section.current = node;
-      inViewRef(node);
-    },
-    [inViewRef]
-  );
+  const square = useRef();
 
   // Effects
   useEffect(() => {
     getBounds();
-    animReset();
+    // animReset();
   }, []);
 
   useEffect(() => {
@@ -134,10 +105,12 @@ function AnimateSection() {
   }, [y]);
 
   useEffect(() => {
-    if (inView) {
-      animCard(index.current);
-    }
-  }, [index, inView]);
+    // if (isInView) {
+    //   animIn();
+    // } else {
+    //   animOut();
+    // }
+  }, [isInView]);
 
   const getBounds = () => {
     setBounds(() => section.current.getBoundingClientRect());
@@ -145,40 +118,57 @@ function AnimateSection() {
 
   const onScroll = () => {
     const yValue = section.current.offsetTop - bounds.top;
-    const yProgress = yValue / bounds.height;
-    console.log(section.current.offsetTop, bounds.top, bounds.height);
-    // TODO find a better way to handle the max limit
-    const currentIndex = Math.min(Math.trunc(yProgress * cards.length), cards.length - 1);
-    if (currentIndex !== index.current) {
-      setIndex((prev) => ({ current: currentIndex }));
-    }
+    // TODO Use height container not window
+    const yProgress = yValue / (bounds.height - window.innerHeight);
+    checkInView(yProgress);
   };
 
-  // Animations
+  const checkInView = (yProgress) => {
+    if (yProgress > 0 && yProgress < 1 && !isInView) setIsInView(true);
+    if ((yProgress === 0 || yProgress > 1) && isInView) setIsInView(false);
+  };
+
+  // Animation
   const animReset = () => {
-    gsap.set(`.${styles.card}`, {
-      opacity: 0.2,
+    gsap.killTweensOf(square.current);
+
+    gsap.set(square.current, {
+      opacity: 0,
     });
   };
-  const animCard = (index) => {
-    // console.log(index);
-    gsap.to(cardsRefs.current[index], {
+  const animIn = () => {
+    gsap.killTweensOf(square.current);
+
+    gsap.to(square.current, {
       opacity: 1,
     });
   };
-
+  const animOut = () => {
+    gsap.killTweensOf(square.current);
+    gsap.to(square.current, {
+      opacity: 0,
+    });
+  };
   return (
-    <section ref={setRefs} className={classnames(styles.section, styles.animate)}>
-      Animate section
-      {cards.map((_, i) => (
-        <Card ref={setCardsRefs} key={i} index={i} />
-      ))}
+    <section ref={section} className={classnames(styles.section, styles.animate)}>
+      <div
+        ref={square}
+        className={classnames(styles.square, {
+          [styles.inView]: isInView,
+        })}
+        style={{ backgroundColor: color }}
+      >
+        animate section - {index}
+      </div>
     </section>
   );
 }
 
 function Section({ index }) {
-  if (index === 2) return <AnimateSection />;
+  if (index === 2) return <AnimateSection index={index} color={"grey"} />;
+  if (index === 3) return <AnimateSection index={index} color={"darkGrey"} />;
+  if (index === 4) return <AnimateSection index={index} color={"grey"} />;
+  if (index === 5) return <AnimateSection index={index} color={"darkGrey"} />;
   return <section className={styles.section}>section - {index}</section>;
 }
 
@@ -190,7 +180,7 @@ export default function ScrollMobile() {
     }
   }, []);
 
-  const sections = new Array(6).fill();
+  const sections = new Array(8).fill();
 
   return (
     <>
