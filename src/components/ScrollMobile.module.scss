@@ -19,8 +19,9 @@ $headerHeight: 0px;
 .section {
   width: 100%;
   height: calc(100vh - $headerHeight);
-  scroll-snap-align: start;
+  scroll-snap-align: center;
   scroll-margin-block-start: $headerHeight;
+  // scroll-snap-stop: always;
   border: 2px solid grey;
   display: flex;
   justify-content: center;
@@ -35,12 +36,26 @@ $headerHeight: 0px;
     margin-top: $headerHeight;
   }
 
-  &:nth-of-type(2) {
-    position: relative;
-    top: unset;
-    z-index: 1;
-    background-color: darkblue;
+  &.animate {
+    // height: 100vh;
+    scroll-snap-align: start;
     height: 300vh;
+    display: block;
+    background-color: darkcyan;
+  }
+
+  .card {
+    display: flex;
+    // display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: darkblue;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid salmon;
   }
 }
 
