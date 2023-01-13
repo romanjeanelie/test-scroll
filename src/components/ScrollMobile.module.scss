@@ -21,7 +21,7 @@ $headerHeight: 0px;
   height: calc(100vh - $headerHeight);
   scroll-snap-align: start;
   scroll-margin-block-start: $headerHeight;
-  scroll-snap-stop: always;
+  // scroll-snap-stop: always;
   border: 2px solid grey;
   display: flex;
   justify-content: center;
@@ -31,39 +31,53 @@ $headerHeight: 0px;
   top: 0;
   background-color: black;
   z-index: 0;
+  // z-index: 1;
 
   &:nth-of-type(1) {
     margin-top: $headerHeight;
   }
 
-  &.animate {
-    height: 200vh;
-    background-color: darkcyan;
+  &.marker {
+    height: 100vh;
+    background-color: transparent;
+    border: none;
 
-    .square {
-      opacity: 0;
-      position: absolute;
-      top: 0;
-      left: 0;
-
-      width: 100%;
-      height: 100vh;
-
-      transition: 300ms opacity;
-
-      // Fix bug whith scroll-snap when opacity change
-      will-change: opacity;
-
-      &.inView {
-        opacity: 1;
-      }
+    &.show {
+      background-color: black;
+    }
+    &.last {
+      height: 300vh;
     }
   }
 }
 
+.fixed {
+  position: fixed;
+  height: 100vh;
+  width: 100vw;
+  top: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  pointer-events: none;
+  background-color: black;
+  z-index: 0;
+}
+
+// For mobile
 @media only screen and (max-width: 750px) {
   .section {
     position: unset;
     top: unset;
+
+    &.marker {
+      &.last {
+        height: 200vh;
+      }
+    }
+  }
+
+  .fixed {
+    z-index: -1;
   }
 }

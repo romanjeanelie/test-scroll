@@ -41,7 +41,6 @@ const useScroll = (options) => {
   const updateScrollValues = useCallback(() => {
     const y = window.pageYOffset || rootElement.scrollTop;
     const yProgress = (rootElement.scrollTop + rootElement.offsetHeight) / rootElement.scrollHeight;
-
     setScrollValues(() => ({
       y,
       yProgress,
@@ -76,28 +75,21 @@ function Header() {
   );
 }
 
-const Card = React.forwardRef(({ index }, ref) => {
-  return (
-    <div ref={ref} className={styles.card}>
-      Card - {index}
-    </div>
-  );
-});
-
 function AnimateSection({ index, color }) {
-  //   // State
   const { y } = useScroll({ wait: 100 });
+
+  //   // State
   const [bounds, setBounds] = useState({});
   const [isInView, setIsInView] = useState(false);
 
   // Ref
-  const section = useRef();
-  const square = useRef();
+  const sectionMarker = useRef();
+  const sectionFixed = useRef();
 
   // Effects
   useEffect(() => {
     getBounds();
-    // animReset();
+    animReset();
   }, []);
 
   useEffect(() => {
@@ -105,21 +97,22 @@ function AnimateSection({ index, color }) {
   }, [y]);
 
   useEffect(() => {
-    // if (isInView) {
-    //   animIn();
-    // } else {
-    //   animOut();
-    // }
+    if (isInView) {
+      animIn();
+    } else {
+      animOut();
+    }
   }, [isInView]);
 
   const getBounds = () => {
-    setBounds(() => section.current.getBoundingClientRect());
+    setBounds(() => sectionMarker.current.getBoundingClientRect());
   };
 
   const onScroll = () => {
-    const yValue = section.current.offsetTop - bounds.top;
-    // TODO Use height container not window
-    const yProgress = yValue / (bounds.height - window.innerHeight);
+    const yValue = isIOS
+      ? gsap.utils.clamp(0, bounds.height, y - bounds.top)
+      : sectionMarker.current.offsetTop - bounds.top;
+    const yProgress = yValue / bounds.height;
     checkInView(yProgress);
   };
 
@@ -130,54 +123,53 @@ function AnimateSection({ index, color }) {
 
   // Animation
   const animReset = () => {
-    gsap.killTweensOf(square.current);
-
-    gsap.set(square.current, {
-      opacity: 0,
+    gsap.killTweensOf(sectionFixed.current);
+    gsap.set(sectionFixed.current, {
+      autoAlpha: 0,
     });
   };
   const animIn = () => {
-    gsap.killTweensOf(square.current);
-
-    gsap.to(square.current, {
-      opacity: 1,
+    gsap.killTweensOf(sectionFixed.current);
+    gsap.to(sectionFixed.current, {
+      autoAlpha: 1,
     });
   };
   const animOut = () => {
-    gsap.killTweensOf(square.current);
-    gsap.to(square.current, {
-      opacity: 0,
+    gsap.killTweensOf(sectionFixed.current);
+    gsap.to(sectionFixed.current, {
+      autoAlpha: 0,
     });
   };
   return (
-    <section ref={section} className={classnames(styles.section, styles.animate)}>
-      <div
-        ref={square}
-        className={classnames(styles.square, {
-          [styles.inView]: isInView,
+    <>
+      <section
+        ref={sectionMarker}
+        className={classnames(styles.section, styles.marker, {
+          [styles.show]: index === 0,
+          [styles.last]: index === 3,
         })}
-        style={{ backgroundColor: color }}
-      >
-        animate section - {index}
-      </div>
-    </section>
+      ></section>
+      <section ref={sectionFixed} className={classnames(styles.fixed)}>
+        fixed section - {index}
+      </section>
+    </>
   );
 }
 
 function Section({ index }) {
-  if (index === 2) return <AnimateSection index={index} color={"grey"} />;
-  if (index === 3) return <AnimateSection index={index} color={"darkGrey"} />;
-  if (index === 4) return <AnimateSection index={index} color={"grey"} />;
-  if (index === 5) return <AnimateSection index={index} color={"darkGrey"} />;
+  if (index === 2) return <AnimateSection index={0} color={"grey"} />;
+  if (index === 3) return <AnimateSection index={1} color={"darkGrey"} />;
+  if (index === 4) return <AnimateSection index={2} color={"grey"} />;
+  if (index === 5) return <AnimateSection index={3} color={"darkGrey"} />;
   return <section className={styles.section}>section - {index}</section>;
 }
 
 export default function ScrollMobile() {
   useEffect(() => {
-    if (!isIOS) {
-      document.querySelector("html").style.overflowY = "scroll";
-      document.querySelector("html").style.height = "100%";
-    }
+    // if (!isIOS) {
+    //   document.querySelector("html").style.overflowY = "scroll";
+    //   document.querySelector("html").style.height = "100%";
+    // }
   }, []);
 
   const sections = new Array(8).fill();
