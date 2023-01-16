@@ -4,7 +4,7 @@ import useScrollDirection from "../hooks/useScrollDirection";
 import { SCROLL_UP, SCROLL_DOWN } from "../hooks/useScrollDirection";
 import { clamp, isEmpty } from "lodash";
 import { useInView } from "react-intersection-observer";
-import { isIOS, isSafari } from "react-device-detect";
+import { isIOS, isMobile } from "react-device-detect";
 
 // Styles
 import styles from "./ScrollHeight.module.scss";
@@ -47,7 +47,6 @@ const useScroll = () => {
     y: 0,
     yProgress: 0,
   });
-  const [scrollDir, setScrollDir] = useState(null);
 
   // Refs
   const timeOut = useRef();
@@ -79,7 +78,6 @@ const useScroll = () => {
 
   const updateScrollValues = useCallback(() => {
     const y = window.pageYOffset;
-    // const yProgress = (rootElement.scrollTop + rootElement.offsetHeight) / rootElement.scrollHeight;
     setScrollValues(() => ({
       y,
     }));
@@ -150,11 +148,12 @@ const Section = ({ index, height, onIntersectIn }) => {
   }, []);
 
   useEffect(() => {
-    if (!bounds) return;
+    if (!bounds || isMobile) return;
     updateSectionHeight();
   }, [scrollValues, bounds, isScrolling]);
 
   useEffect(() => {
+    if (isMobile) return;
     if (isIntersect) {
       onIntersectIn();
     }
@@ -222,18 +221,16 @@ function ScrollHeight() {
   const [activeSection, setActiveSection] = useState(0);
 
   useEffect(() => {
+    if (isMobile) return;
     const totalHeight = sections.reduce((acc, curr) => acc + curr.height, 0);
     document.body.style.height = totalHeight + "vh";
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
-    if (!isScrolling) {
+    if (!isScrolling && !isMobile) {
       onScrollUp();
     }
   }, [isScrolling, direction]);
-  useEffect(() => {
-    console.log({ activeSection });
-  }, [activeSection]);
 
   const onScrollUp = () => {
     // TODO prevent for section animated

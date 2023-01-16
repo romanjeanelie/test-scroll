@@ -8,12 +8,12 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: darkblue;
+  background-color: darkslategray;
   opacity: 1;
   overflow: hidden;
 
   &.isAnimated {
-    background: red;
+    background: grey;
 
     height: 300vh;
   }
@@ -24,4 +24,14 @@
   // z-index: -1;
   background: red;
   opacity: 0;
+}
+
+// For mobile
+@media only screen and (max-width: 750px) {
+  .section {
+    width: 100%;
+    height: 100vh;
+    position: unset;
+    top: unset;
+  }
 }

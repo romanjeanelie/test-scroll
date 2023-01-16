@@ -14,12 +14,12 @@ a {
 }
 
 // For scroll mobile
-// body {
-//   overflow-y: scroll;
-//   scroll-snap-type: y mandatory;
-//   height: 100%;
-// }
+body {
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  height: 100%;
+}
 
-// html {
-//   scroll-snap-type: y mandatory;
-// }
+html {
+  scroll-snap-type: y mandatory;
+}

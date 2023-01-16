@@ -1,13 +1,56 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { throttle } from "lodash";
-import { isIOS, isSafari } from "react-device-detect";
-import useScrollDirection from "../hooks/useScrollDirection";
+import { isIOS, isSafari, isDesktop } from "react-device-detect";
 import { useInView } from "react-intersection-observer";
 
 // Styles
 import { gsap } from "gsap";
 import styles from "./ScrollMobile.module.scss";
 import classnames from "classnames";
+
+export const SCROLL_UP = "up";
+export const SCROLL_DOWN = "down";
+
+const useScrollDirection = ({ initialDirection = SCROLL_DOWN, thresholdPixels = 64 } = {}) => {
+  const [scrollDir, setScrollDir] = useState(initialDirection);
+
+  useEffect(() => {
+    const threshold = thresholdPixels || 0;
+    let lastScrollY = window.pageYOffset;
+    let ticking = false;
+
+    const updateScrollDir = () => {
+      const scrollY = window.pageYOffset || document.body.scrollTop;
+
+      if (Math.abs(scrollY - lastScrollY) < threshold) {
+        // We haven't exceeded the threshold
+        ticking = false;
+        return;
+      }
+
+      setScrollDir(scrollY > lastScrollY ? SCROLL_DOWN : SCROLL_UP);
+      lastScrollY = scrollY > 0 ? scrollY : 0;
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateScrollDir);
+        ticking = true;
+      }
+    };
+
+    document.body.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll);
+
+    return () => {
+      document.body.removeEventListener("scroll", onScroll);
+      window.removeEventListener("scroll", onScroll);
+    };
+  }, [initialDirection, thresholdPixels]);
+
+  return scrollDir;
+};
 
 export const useScroll = (options) => {
   const { wait, rootElement } = useMemo(
@@ -110,7 +153,6 @@ function AnimateSection({ index, color }) {
   }, [y]);
 
   useEffect(() => {
-    console.log(inView);
     if (index === 0 && inView) {
       animIn();
     } else {
@@ -208,13 +250,18 @@ export default function ScrollMobile() {
       document.querySelector("html").style.overflowY = "scroll";
       document.querySelector("html").style.height = "100%";
     }
+    // Prevent blocking scroll up on Safari
+    if (isSafari && isDesktop) {
+      document.querySelector("html").style.scrollSnapType = "y proximity";
+      document.body.style.scrollSnapType = "y proximity";
+    }
   }, []);
 
   const sections = new Array(8).fill();
 
   return (
     <>
-      {/* <Header /> */}
+      <Header />
       {sections.map((el, i) => (
         <Section key={i} index={i} />
       ))}
