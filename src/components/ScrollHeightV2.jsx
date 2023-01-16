@@ -17,6 +17,29 @@ function useArrayRef() {
   return [refs, (ref) => ref && refs.current.push(ref)];
 }
 
+const sections = [
+  {
+    key: 0,
+    height: 100,
+  },
+  {
+    key: 1,
+    height: 300,
+  },
+  {
+    key: 2,
+    height: 100,
+  },
+  {
+    key: 3,
+    height: 100,
+  },
+  {
+    key: 4,
+    height: 100,
+  },
+];
+
 const useScroll = () => {
   // State
   const [isScrolling, setIsScrolling] = useState(false);
@@ -142,11 +165,14 @@ const Section = ({ index, height, onIntersectIn }) => {
   };
 
   const getProgress = () => {
-    return (y - index * bounds.height) / bounds.height;
+    const previousHeight =
+      (sections.slice(0, index).reduce((acc, curr) => acc + curr.height, 0) / 100) * window.innerHeight;
+    return (y - previousHeight) / bounds.height;
   };
 
   const updateSectionHeight = () => {
     const yProgress = getProgress();
+
     const yProgressClamped = clamp(yProgress, 0, 1);
 
     updateHeight(yProgressClamped);
@@ -180,28 +206,6 @@ const Section = ({ index, height, onIntersectIn }) => {
 
 function ScrollHeight() {
   const nbSections = 8;
-  const sections = [
-    {
-      key: 0,
-      height: 100,
-    },
-    {
-      key: 1,
-      height: 100,
-    },
-    {
-      key: 2,
-      height: 100,
-    },
-    {
-      key: 3,
-      height: 100,
-    },
-    {
-      key: 4,
-      height: 100,
-    },
-  ];
 
   const direction = useScrollDirection();
   const { isScrolling, scrollValues } = useScroll();
@@ -225,8 +229,9 @@ function ScrollHeight() {
     const { y } = scrollValues;
     const yProgress = y / window.innerHeight;
 
-    const indexSection = direction === SCROLL_DOWN ? Math.ceil(yProgress) : Math.floor(yProgress);
-    goToSection(indexSection);
+    // const indexTarget = activeSection;
+    const indexTarget = direction === SCROLL_DOWN ? Math.ceil(yProgress) : Math.floor(yProgress);
+    // goToSection(indexTarget);
   };
 
   const getHeightTarget = (indexTarget) => {
@@ -235,17 +240,13 @@ function ScrollHeight() {
 
     result = newArr.slice(0, indexTarget).reduce((acc, curr) => acc + curr.height, 0);
     result = (result / 100) * window.innerHeight;
-    console.log(result);
+
     return result;
   };
 
   const goToSection = (indexTarget) => {
     const heightTarget = getHeightTarget(indexTarget);
-    const newTarget =
-      (sections.splice(0, indexTarget).reduce((acc, curr, i) => acc + curr.height, 0) / 100) * window.innerHeight;
-    const targetY = indexTarget * window.innerHeight;
-    // window.scrollTo({ top: targetY, behavior: "smooth" });
-    window.scrollTo({ top: newTarget, behavior: "smooth" });
+    window.scrollTo({ top: heightTarget, behavior: "smooth" });
   };
 
   return (
