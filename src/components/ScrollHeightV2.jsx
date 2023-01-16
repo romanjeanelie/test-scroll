@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 // import { useScroll } from "./ScrollMobile";
 import useScrollDirection from "../hooks/useScrollDirection";
 import { SCROLL_UP, SCROLL_DOWN } from "../hooks/useScrollDirection";
-import { clamp } from "lodash";
+import { clamp, isEmpty } from "lodash";
 import { useInView } from "react-intersection-observer";
 import { isIOS, isSafari } from "react-device-detect";
 
@@ -77,7 +77,7 @@ const AnimateSection = ({ index, isIntersect }) => {
 
   useEffect(() => {
     if (isIntersect) {
-      animIn();
+      onIntersectIn();
     } else {
       animOut();
     }
@@ -88,7 +88,6 @@ const AnimateSection = ({ index, isIntersect }) => {
     const yProgress = clamp((y - index * window.innerHeight) / window.innerHeight, 0, 1);
     // const opacity = Math.cos((yProgress * 2 - 1) * Math.PI);
     // const opacity = yProgress;
-    // console.log({ opacity });
     // sectionRef.current.style.opacity = opacity;
   };
 
@@ -111,35 +110,61 @@ const AnimateSection = ({ index, isIntersect }) => {
   );
 };
 
-const Section = ({ index }) => {
-  const isAnimated = index === 1 || index === 2;
-  const { scrollValues } = useScroll();
+const Section = ({ index, height, onIntersectIn }) => {
+  const isAnimated = index === 1;
+  const { isScrolling, scrollValues } = useScroll();
+  const { y } = scrollValues;
 
   // State
-  const [bounds, setBounds] = useState({});
+  const [bounds, setBounds] = useState(null);
   const [isIntersect, setIsIntersect] = useState(false);
 
   // Ref
   const sectionRef = useRef();
 
   useEffect(() => {
+    getBounds();
+  }, []);
+
+  useEffect(() => {
+    if (!bounds) return;
     updateSectionHeight();
-  }, [scrollValues]);
+  }, [scrollValues, bounds, isScrolling]);
+
+  useEffect(() => {
+    if (isIntersect) {
+      onIntersectIn();
+    }
+  }, [isIntersect]);
+
+  const getBounds = () => {
+    setBounds(() => sectionRef.current.getBoundingClientRect());
+  };
+
+  const getProgress = () => {
+    return (y - index * bounds.height) / bounds.height;
+  };
 
   const updateSectionHeight = () => {
-    const { y } = scrollValues;
-    const yProgress = (y - index * window.innerHeight) / window.innerHeight;
-    const height = clamp(yProgress, 0, 1);
-    sectionRef.current.style.height = `${100 - height * 100}vh`;
+    const yProgress = getProgress();
+    const yProgressClamped = clamp(yProgress, 0, 1);
 
-    const progressVisible = yProgress + 1;
+    updateHeight(yProgressClamped);
+    checkIntersect(yProgressClamped);
+  };
 
-    if ((yProgress < 0 || yProgress > 0) && isIntersect) {
-      setIsIntersect(false);
-    }
+  const updateHeight = (yProgressClamped) => {
+    sectionRef.current.style.height = `${100 - yProgressClamped * 100}vh`;
+  };
 
-    if (progressVisible > 0 && progressVisible < 1 && !isIntersect) {
+  const checkIntersect = (yProgressClamped) => {
+    const isActive = yProgressClamped > 0 && yProgressClamped < 1;
+
+    if (!isIntersect && isActive) {
       setIsIntersect(true);
+    }
+    if (isIntersect && !isActive) {
+      setIsIntersect(false);
     }
   };
 
@@ -155,23 +180,48 @@ const Section = ({ index }) => {
 
 function ScrollHeight() {
   const nbSections = 8;
-  //   const sections = new Array(nbSections).fill().reverse();
-  const sections = Array.from(Array(nbSections).keys()).reverse();
+  const sections = [
+    {
+      key: 0,
+      height: 100,
+    },
+    {
+      key: 1,
+      height: 100,
+    },
+    {
+      key: 2,
+      height: 100,
+    },
+    {
+      key: 3,
+      height: 100,
+    },
+    {
+      key: 4,
+      height: 100,
+    },
+  ];
+
   const direction = useScrollDirection();
   const { isScrolling, scrollValues } = useScroll();
 
+  // State
+  const [activeSection, setActiveSection] = useState(0);
+
   useEffect(() => {
-    document.body.style.height = 100 * nbSections + "vh";
+    const totalHeight = sections.reduce((acc, curr) => acc + curr.height, 0);
+    document.body.style.height = totalHeight + "vh";
   }, []);
 
   useEffect(() => {
     if (!isScrolling) {
-      updateSections();
+      onScrollUp();
     }
   }, [isScrolling, direction]);
 
-  const updateSections = () => {
-    console.log("scroll up");
+  const onScrollUp = () => {
+    // const indexTarget = direction === SCROLL_DOWN ? index + 1 : index;
     const { y } = scrollValues;
     const yProgress = y / window.innerHeight;
 
@@ -179,15 +229,29 @@ function ScrollHeight() {
     goToSection(indexSection);
   };
 
-  const goToSection = (index) => {
-    const targetY = index * window.innerHeight;
-    window.scrollTo({ top: targetY, behavior: "smooth" });
+  const getHeightTarget = (indexTarget) => {
+    let result;
+    const newArr = [...sections];
+
+    result = newArr.slice(0, indexTarget).reduce((acc, curr) => acc + curr.height, 0);
+    result = (result / 100) * window.innerHeight;
+    console.log(result);
+    return result;
+  };
+
+  const goToSection = (indexTarget) => {
+    const heightTarget = getHeightTarget(indexTarget);
+    const newTarget =
+      (sections.splice(0, indexTarget).reduce((acc, curr, i) => acc + curr.height, 0) / 100) * window.innerHeight;
+    const targetY = indexTarget * window.innerHeight;
+    // window.scrollTo({ top: targetY, behavior: "smooth" });
+    window.scrollTo({ top: newTarget, behavior: "smooth" });
   };
 
   return (
     <>
-      {sections.map((el, i) => (
-        <Section key={i} index={el} />
+      {[...sections].reverse().map((el, i) => (
+        <Section key={el.key} index={el.key} height={el.height} onIntersectIn={() => setActiveSection(el.key)} />
       ))}
     </>
   );
