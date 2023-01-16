@@ -180,7 +180,8 @@ const Section = ({ index, height, onIntersectIn }) => {
   };
 
   const updateHeight = (yProgressClamped) => {
-    sectionRef.current.style.height = `${100 - yProgressClamped * 100}vh`;
+    const newHeight = Math.min((((1 - yProgressClamped) * height) / 100) * window.innerHeight, window.innerHeight);
+    sectionRef.current.style.height = `${newHeight}px`;
   };
 
   const checkIntersect = (yProgressClamped) => {
