@@ -174,18 +174,25 @@ const Section = ({ index, height, onIntersectIn }) => {
     const yProgress = getProgress();
 
     const yProgressClamped = clamp(yProgress, 0, 1);
+    const yProgressClampedByHeight = ((1 - yProgressClamped) * height) / height;
+
+    if (index === 4) {
+      //   console.log({ yProgress });
+    }
 
     updateHeight(yProgressClamped);
     checkIntersect(yProgressClamped);
   };
 
-  const updateHeight = (yProgressClamped) => {
-    const newHeight = Math.min((((1 - yProgressClamped) * height) / 100) * window.innerHeight, window.innerHeight);
+  const updateHeight = (yProgress) => {
+    // TODO write it better
+    const newHeight = Math.min((((1 - yProgress) * height) / 100) * window.innerHeight, window.innerHeight);
+    console.log();
     sectionRef.current.style.height = `${newHeight}px`;
   };
 
-  const checkIntersect = (yProgressClamped) => {
-    const isActive = yProgressClamped > 0 && yProgressClamped < 1;
+  const checkIntersect = (yProgress) => {
+    const isActive = yProgress > 0 && yProgress < 1;
 
     if (!isIntersect && isActive) {
       setIsIntersect(true);
@@ -224,17 +231,21 @@ function ScrollHeight() {
       onScrollUp();
     }
   }, [isScrolling, direction]);
+  useEffect(() => {
+    console.log({ activeSection });
+  }, [activeSection]);
 
   const onScrollUp = () => {
-    // const indexTarget = direction === SCROLL_DOWN ? index + 1 : index;
+    // TODO prevent for section animated
+    // const indexTarget = direction === SCROLL_DOWN ? activeSection + 1 : activeSection;
+    const indexTarget = activeSection;
     const { y } = scrollValues;
     const yProgress = y / window.innerHeight;
 
-    // const indexTarget = activeSection;
-    const indexTarget = direction === SCROLL_DOWN ? Math.ceil(yProgress) : Math.floor(yProgress);
-    // goToSection(indexTarget);
+    goToSection(indexTarget);
   };
 
+  // TODO write it better
   const getHeightTarget = (indexTarget) => {
     let result;
     const newArr = [...sections];
