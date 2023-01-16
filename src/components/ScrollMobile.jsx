@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { throttle } from "lodash";
-import { isIOS } from "react-device-detect";
+import { isIOS, isSafari } from "react-device-detect";
 import useScrollDirection from "../hooks/useScrollDirection";
+import { useInView } from "react-intersection-observer";
 
 // Styles
 import { gsap } from "gsap";
 import styles from "./ScrollMobile.module.scss";
 import classnames from "classnames";
 
-const useScroll = (options) => {
+export const useScroll = (options) => {
   const { wait, rootElement } = useMemo(
     () => ({
       wait: 250,
@@ -85,6 +86,18 @@ function AnimateSection({ index, color }) {
   // Ref
   const sectionMarker = useRef();
   const sectionFixed = useRef();
+  const logDiv = useRef();
+
+  // Intersect
+  const { ref: inViewRef, inView } = useInView({ threshold: 0.99 });
+
+  const setRefs = useCallback(
+    (node) => {
+      sectionMarker.current = node;
+      inViewRef(node);
+    },
+    [inViewRef]
+  );
 
   // Effects
   useEffect(() => {
@@ -97,12 +110,17 @@ function AnimateSection({ index, color }) {
   }, [y]);
 
   useEffect(() => {
-    if (isInView) {
+    console.log(inView);
+    if (index === 0 && inView) {
       animIn();
     } else {
-      animOut();
+      if (isInView) {
+        animIn();
+      } else {
+        animOut();
+      }
     }
-  }, [isInView]);
+  }, [isInView, inView]);
 
   const getBounds = () => {
     setBounds(() => sectionMarker.current.getBoundingClientRect());
@@ -118,7 +136,14 @@ function AnimateSection({ index, color }) {
 
   const checkInView = (yProgress) => {
     if (yProgress > 0 && yProgress < 1 && !isInView) setIsInView(true);
-    if ((yProgress === 0 || yProgress > 1) && isInView) setIsInView(false);
+
+    // TODO improve it
+    if (index === 3) {
+      if ((yProgress === 0 || yProgress === (1 / 3) * 2) && isInView) {
+        setIsInView(false);
+      }
+    }
+    if ((yProgress === 0 || yProgress >= 1) && isInView) setIsInView(false);
   };
 
   // Animation
@@ -142,41 +167,54 @@ function AnimateSection({ index, color }) {
   };
   return (
     <>
+      <div
+        ref={logDiv}
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          zIndex: 10,
+        }}
+      ></div>
       <section
-        ref={sectionMarker}
+        ref={setRefs}
         className={classnames(styles.section, styles.marker, {
-          [styles.show]: index === 0,
+          [styles.first]: index === 0,
           [styles.last]: index === 3,
         })}
       ></section>
       <section ref={sectionFixed} className={classnames(styles.fixed)}>
-        fixed section - {index}
+        <div className={styles.videoContainer}>
+          <video src={`assets/video/${index + 1}.mp4`} autoPlay playsInline muted />
+        </div>
+        <p>fixed section - {index}</p>
       </section>
     </>
   );
 }
 
 function Section({ index }) {
-  if (index === 2) return <AnimateSection index={0} color={"grey"} />;
-  if (index === 3) return <AnimateSection index={1} color={"darkGrey"} />;
-  if (index === 4) return <AnimateSection index={2} color={"grey"} />;
-  if (index === 5) return <AnimateSection index={3} color={"darkGrey"} />;
+  if (index === 2) return <AnimateSection index={0} />;
+  if (index === 3) return <AnimateSection index={1} />;
+  if (index === 4) return <AnimateSection index={2} />;
+  if (index === 5) return <AnimateSection index={3} />;
   return <section className={styles.section}>section - {index}</section>;
 }
 
 export default function ScrollMobile() {
   useEffect(() => {
-    // if (!isIOS) {
-    //   document.querySelector("html").style.overflowY = "scroll";
-    //   document.querySelector("html").style.height = "100%";
-    // }
+    // Prevent blocking scroll when page is reloaded
+    if (!isIOS) {
+      document.querySelector("html").style.overflowY = "scroll";
+      document.querySelector("html").style.height = "100%";
+    }
   }, []);
 
   const sections = new Array(8).fill();
 
   return (
     <>
-      <Header />
+      {/* <Header /> */}
       {sections.map((el, i) => (
         <Section key={i} index={i} />
       ))}

@@ -20,8 +20,8 @@ $headerHeight: 0px;
   width: 100%;
   height: calc(100vh - $headerHeight);
   scroll-snap-align: start;
-  scroll-margin-block-start: $headerHeight;
-  // scroll-snap-stop: always;
+  // scroll-margin-block-start: $headerHeight;
+  scroll-snap-stop: always;
   border: 2px solid grey;
   display: flex;
   justify-content: center;
@@ -38,11 +38,12 @@ $headerHeight: 0px;
   }
 
   &.marker {
+    display: none;
     height: 100vh;
     background-color: transparent;
     border: none;
 
-    &.show {
+    &.first {
       background-color: black;
     }
     &.last {
@@ -52,16 +53,39 @@ $headerHeight: 0px;
 }
 
 .fixed {
+  display: flex;
+  display: none;
   position: fixed;
   height: 100vh;
   width: 100vw;
   top: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  // justify-content: center;
+  // align-items: center;
   pointer-events: none;
   background-color: black;
   z-index: 0;
+  flex-direction: column;
+
+  will-change: opacity;
+
+  .videoContainer {
+    position: relative;
+    height: 66vh;
+    width: 100%;
+
+    video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  p {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 }
 
 // For mobile
@@ -71,6 +95,10 @@ $headerHeight: 0px;
     top: unset;
 
     &.marker {
+      &.first {
+        height: 200vh;
+        background: transparent;
+      }
       &.last {
         height: 200vh;
       }
