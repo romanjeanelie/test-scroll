@@ -50,6 +50,11 @@ $headerHeight: 0px;
       height: 300vh;
     }
   }
+
+  p {
+    height: 40vh;
+    overflow: scroll;
+  }
 }
 
 .fixed {
@@ -61,7 +66,7 @@ $headerHeight: 0px;
   top: 0;
   // justify-content: center;
   // align-items: center;
-  pointer-events: none;
+  // pointer-events: none;
   background-color: black;
   z-index: 0;
   flex-direction: column;
