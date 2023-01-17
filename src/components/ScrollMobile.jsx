@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { throttle } from "lodash";
-import { isIOS, isSafari, isDesktop } from "react-device-detect";
+import { isIOS, isSafari, isDesktop, isFirefox } from "react-device-detect";
 import { useInView } from "react-intersection-observer";
 
 // Styles
@@ -329,7 +329,7 @@ export default function ScrollMobile() {
       document.querySelector("html").style.height = "100%";
     }
     // Prevent blocking scroll up on Safari
-    if (isSafari && isDesktop) {
+    if ((isSafari || isFirefox) && isDesktop) {
       document.querySelector("html").style.scrollSnapType = "y proximity";
       document.body.style.scrollSnapType = "y proximity";
     }
