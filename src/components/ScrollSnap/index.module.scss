@@ -1,7 +1,7 @@
 .header {
   position: fixed;
   top: 0;
-  background-color: #eee;
+  background-color: #fff;
   color: #333;
   width: 100%;
   text-align: center;
@@ -15,63 +15,47 @@
   }
 }
 
-$headerHeight: 0px;
 .section {
   width: 100%;
-  height: calc(100vh - $headerHeight);
+  height: 100vh;
   scroll-snap-align: start;
-  // scroll-margin-block-start: $headerHeight;
   scroll-snap-stop: always;
-  border: 2px solid grey;
   display: flex;
   justify-content: center;
   align-items: center;
-
   position: sticky;
   top: 0;
-  background-color: black;
+  color: #333;
   z-index: 0;
   // z-index: 1;
 
-  &:nth-of-type(1) {
-    margin-top: $headerHeight;
-  }
-
   &.marker {
-    // display: none;
     height: 100vh;
     background-color: transparent;
-    border: none;
+    border-style: none;
 
     &.first {
-      background-color: black;
+      background-color: #eee;
     }
+
     &.last {
       height: 300vh;
     }
-  }
-
-  p {
-    height: 40vh;
-    overflow: scroll;
   }
 }
 
 .fixed {
   display: flex;
-  // display: none;
   position: fixed;
   height: 100vh;
   width: 100vw;
   top: 0;
-  // justify-content: center;
-  // align-items: center;
   pointer-events: none;
-  background-color: black;
+  background-color: darkblue;
   z-index: 0;
   flex-direction: column;
-
   will-change: opacity;
+  color: #333;
 
   .videoContainer {
     position: relative;
@@ -104,6 +88,7 @@ $headerHeight: 0px;
         height: 200vh;
         background: transparent;
       }
+
       &.last {
         height: 200vh;
       }

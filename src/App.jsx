@@ -1,9 +1,9 @@
-import ScrollMobile from "./components/ScrollMobile";
+import ScrollSnap from "./components/ScrollSnap";
 import ScrollHeight from "./components/ScrollHeight";
 import ScrollHeightV2 from "./components/ScrollHeightV2";
 
 function App() {
-  return <ScrollMobile />;
+  return <ScrollSnap />;
   // return <ScrollHeightV2 />;
 }
 
